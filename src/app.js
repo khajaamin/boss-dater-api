@@ -10,6 +10,7 @@ global.logger = require('./utils/logMsg')
 const APIError = require('./utils/APIError');
 const globalErrorHandler = require('./controllers/errorController');
 const fileUpload = require("express-fileupload");
+const { User } = require('./models');
 
 
 var app = express();
@@ -40,14 +41,15 @@ app.get("/", (req, res) => {
 });
 
 app.get("/test", async (req, res) => {
-  let isConnected = false, error = null 
+  let isConnected = false, error = null, data = {} 
   try {
     await connectWithDB()
     isConnected = true
+    data.users = await User.findAll()
   } catch (e) {
     error = e
   }
-  res.json({ isDbConnected: isConnected, error });
+  res.json({ isDbConnected: isConnected, error, data });
 });
 
 //Routes
