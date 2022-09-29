@@ -53,7 +53,8 @@ app.get("/test", async (req, res) => {
     await client.connect();
     
     client.query('select 1 + 1', (req, res) => {
-      res.json({hello: 'world'})
+      res.json({ hello: 'world' })
+      client.end()
     })
     isConnected = true
     // data.users = await User.findAll()
