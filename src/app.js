@@ -11,7 +11,7 @@ const APIError = require('./utils/APIError');
 const globalErrorHandler = require('./controllers/errorController');
 const fileUpload = require("express-fileupload");
 const { User } = require('./models');
-
+const {Client} = require("pg")
 
 var app = express();
 
@@ -43,9 +43,20 @@ app.get("/", (req, res) => {
 app.get("/test", async (req, res) => {
   let isConnected = false, error = null, data = {} 
   try {
-    await connectWithDB()
+    // await connectWithDB()
+    const client = new Client({
+      connectionString: process.env.DATABASE_URL,
+      ssl: {
+        rejectUnauthorized: false
+      }
+    });
+    await client.connect();
+    
+    client.query('select 1 + 1', (req, res) => {
+      res.json({hello: 'world'})
+    })
     isConnected = true
-    data.users = await User.findAll()
+    // data.users = await User.findAll()
   } catch (e) {
     error = e
   }
