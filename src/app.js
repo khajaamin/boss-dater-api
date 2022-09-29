@@ -43,21 +43,9 @@ app.get("/", (req, res) => {
 app.get("/test", async (req, res) => {
   let isConnected = false, error = null, data = {} 
   try {
-    // await connectWithDB()
-    const client = new Client({
-      connectionString: process.env.DATABASE_URL,
-      ssl: {
-        rejectUnauthorized: false
-      }
-    });
-    await client.connect();
-    
-    client.query('select 1 + 1', (req, res) => {
-      res.json({ hello: 'world' })
-      client.end()
-    })
+    await connectWithDB()
     isConnected = true
-    // data.users = await User.findAll()
+    data.users = await User.findAll()
   } catch (e) {
     error = e
   }
