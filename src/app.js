@@ -39,6 +39,16 @@ app.get("/", (req, res) => {
   res.json({ message: "Welcome to the beginnings of nothingness." });
 });
 
+app.get("/test", async (req, res) => {
+  let isConnected = false, error = null 
+  try {
+    await connectWithDB()
+    isConnected = true
+  } catch (e) {
+    error = e
+  }
+  res.json({ isDbConnected: isConnected, error });
+});
 
 //Routes
 app.use(`${process.env.URL_PREFIX}/auth`, authRoutes);
