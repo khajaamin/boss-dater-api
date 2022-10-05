@@ -208,7 +208,10 @@ const createUser = catchAsync(async (req, res, next) => {
     });
   }
   catch (error) {
-    console.log('errorrrrr',error)
+   res.status(500).json({
+      status: fail,
+      message: error.message,
+    });
   }
 });
 
