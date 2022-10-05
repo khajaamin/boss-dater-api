@@ -541,53 +541,59 @@ console.log(
 const client = require("twilio")("ACfe93f53b69b44a82115056212b96ea95", "0d625e670a16f017abb7e82b353c99b1");
 //Send phone verification code
 exports.sendCode = catchAsync(async (req, res, next) => {
-  const { phoneNumber } = req.body;
-  let codeSend = await client.verify
-    .services(verifySid)
-    .verifications.create({ to: `+${phoneNumber}`, channel: "sms" })
-    .then((message) => console.log(message.status))
-    .catch((err) => console.log("error: ", err));
+  try {
+    const { phoneNumber } = req.body;
+    let codeSend = await client.verify
+      .services(verifySid)
+      .verifications.create({ to: `+${phoneNumber}`, channel: "sms" })
+      .then((message) => console.log(message.status))
+      .catch((err) => console.log("error: ", err));
 
-  if (codeSend) {
-    res.status(status.OK).json({
-      status: messages.SUCCESS,
-      message: messages.CODE_SEND,
-    });
+    if (codeSend) {
+      res.status(status.OK).json({
+        status: messages.SUCCESS,
+        message: messages.CODE_SEND,
+      });
+    }
   }
-});
+  catch (error) {
+    console.log("errorrrrrrrrr", error)
+  }
+}
+);
 
 //Verify Code
 exports.verifyCode = catchAsync(async (req, res, next) => {
   const { code, phoneNumber } = req.body;
-  // res.send.phoneNumber = "+92321888888";
-  return res.end('Hiiiiiiiiiiiiiiiiiiiiii');
+   res.send.phoneNumber = "+92321888888";
+  // return res.end('Hiiiiiiiiiiiiiiiiiiiiii');
   
   console.log("phonenumber :" + req.body.phoneNumber)
 
-  // const check = await client.verify
-  //   .services(process.env.VERIFY_SERVICE_SID)
-  //   .verificationChecks.create({ to: `+${phoneNumber}`, code: code })
-  //   .catch((e) => {
-  //     console.log('eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'+e);
-  //     res.status(406).send({
-  //       message: "Invalid code",
-  //     });
-  //   });
-  // if (check.valid) {
-  //   const userKey = bcrypt.hashSync(phoneNumber, 16);
-  //   // (await user).update({
-  //   //   verifiedAt: new Date(),
-  //   // });
+  const check = await client.verify
+   .services(process.env.VERIFY_SERVICE_SID)
+    .verificationChecks.create({ to: `+${phoneNumber}`, code: code })
+     .catch((e) => {
+     console.log('eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'+e);
+     res.status(406).send({
+       message: "Invalid code",
+       });
+   });
+   if (check.valid) {
+     const userKey = bcrypt.hashSync(phoneNumber, 16);
+   (await user).update({
+ verifiedAt: new Date(),
+  });
 
-  //   res.status(status.OK).json({
-  //     status: messages.SUCCESS,
-  //     message: messages.CODE_VERIFIED,
-  //     data: userKey,
-  //   });
-  // } else {
-  //   return next(new APIError(messages.CODE_NOT_VERIFIED, status.NOT_FOUND));
-  // }
-  next();
+    res.status(status.OK).json({
+       status: messages.SUCCESS,
+       message: messages.CODE_VERIFIED,
+       data: userKey,
+     });
+   } else {
+     return next(new APIError(messages.CODE_NOT_VERIFIED, status.NOT_FOUND));
+   }
+  // next();
 });
 
 exports.verifyForgotPasswordCode = async (req, res, next) => {
