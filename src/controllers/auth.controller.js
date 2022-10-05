@@ -350,6 +350,7 @@ exports.forgotPassword = async (req, res, next) => {
 //Match Token
 exports.matchToken = async (req, res, next) => {
   const { token, email } = req.body;
+  console.log('bodyyyyyyyyyyyyyyyyyyyyyyy' + req.body.token);
   const hashedToken = User.createHashFromString(token);
   const user = await User.findOne({
     include: [
@@ -365,6 +366,7 @@ exports.matchToken = async (req, res, next) => {
     ],
     where: { email },
   });
+  console.log('userrrrrrrrrrrrrrrrrrrrrrrrrrr' + user);
 
   if (!user)
     return next(new APIError(messages.INVALID_TOKEN, status.UNAUTHORIZED));
@@ -377,27 +379,32 @@ exports.matchToken = async (req, res, next) => {
 
 //Reset Password
 exports.resetPassword = async (req, res, next) => {
-  const { password, email } = req.body;
+  try {
+    const { password, email } = req.body;
 
-  const user = await User.findOne({
-    where: {
-      email,
-    },
-  });
+    const user = await User.findOne({
+      where: {
+        email,
+      },
+    });
 
-  if (!user)
-    return next(new APIError(messages.INVALID_TOKEN, status.UNAUTHORIZED));
+    if (!user)
+      return next(new APIError(messages.INVALID_TOKEN, status.UNAUTHORIZED));
 
-  user.password = bcrypt.hashSync(password, 8);
+    user.password = bcrypt.hashSync(password, 8);
 
-  await user.save();
+    await user.save();
 
-  const accessToken = user.getJWTToken();
+    const accessToken = user.getJWTToken();
 
-  res.status(status.OK).json({
-    status: messages.SUCCESS,
-    accessToken,
-  });
+    res.status(status.OK).json({
+      status: messages.SUCCESS,
+      accessToken,
+    });
+  }
+  catch (error) {
+    console.log('errorrrrrrrrrr', error)
+  }
 };
 
 //Google (Social Login)
@@ -547,29 +554,35 @@ exports.sendCode = catchAsync(async (req, res, next) => {
 //Verify Code
 exports.verifyCode = catchAsync(async (req, res, next) => {
   const { code, phoneNumber } = req.body;
-  const check = await client.verify
-    .services(process.env.VERIFY_SERVICE_SID)
-    .verificationChecks.create({ to: `+${phoneNumber}`, code: code })
-    .catch((e) => {
-      console.log(e);
-      res.status(406).send({
-        message: "Invalid code",
-      });
-    });
-  if (check.valid) {
-    const userKey = bcrypt.hashSync(phoneNumber, 16);
-    // (await user).update({
-    //   verifiedAt: new Date(),
-    // });
+  // res.send.phoneNumber = "+92321888888";
+  return res.end('Hiiiiiiiiiiiiiiiiiiiiii');
+  
+  console.log("phonenumber :" + req.body.phoneNumber)
 
-    res.status(status.OK).json({
-      status: messages.SUCCESS,
-      message: messages.CODE_VERIFIED,
-      data: userKey,
-    });
-  } else {
-    return next(new APIError(messages.CODE_NOT_VERIFIED, status.NOT_FOUND));
-  }
+  // const check = await client.verify
+  //   .services(process.env.VERIFY_SERVICE_SID)
+  //   .verificationChecks.create({ to: `+${phoneNumber}`, code: code })
+  //   .catch((e) => {
+  //     console.log('eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'+e);
+  //     res.status(406).send({
+  //       message: "Invalid code",
+  //     });
+  //   });
+  // if (check.valid) {
+  //   const userKey = bcrypt.hashSync(phoneNumber, 16);
+  //   // (await user).update({
+  //   //   verifiedAt: new Date(),
+  //   // });
+
+  //   res.status(status.OK).json({
+  //     status: messages.SUCCESS,
+  //     message: messages.CODE_VERIFIED,
+  //     data: userKey,
+  //   });
+  // } else {
+  //   return next(new APIError(messages.CODE_NOT_VERIFIED, status.NOT_FOUND));
+  // }
+  next();
 });
 
 exports.verifyForgotPasswordCode = async (req, res, next) => {

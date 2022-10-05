@@ -10,8 +10,7 @@ global.logger = require('./utils/logMsg')
 const APIError = require('./utils/APIError');
 const globalErrorHandler = require('./controllers/errorController');
 const fileUpload = require("express-fileupload");
-const { User } = require('./models');
-const {Client} = require("pg")
+const { User } = require('./models'); 
 
 var app = express();
 

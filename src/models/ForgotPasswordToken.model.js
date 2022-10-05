@@ -1,7 +1,9 @@
 const { Model, DataTypes } = require('sequelize')
 const sequelize = require("../config/db.config");
 
-class ForgotPasswordToken extends Model {}
+class ForgotPasswordToken extends Model {
+
+}
 
 ForgotPasswordToken.init(
     {
@@ -18,6 +20,6 @@ ForgotPasswordToken.init(
         sequelize,
         modelName: 'ForgotPasswordToken',
     }
-)
+);
 
-module.exports = ForgotPasswordToken
+module.exports = ForgotPasswordToken;
