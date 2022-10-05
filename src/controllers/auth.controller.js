@@ -349,32 +349,37 @@ exports.forgotPassword = async (req, res, next) => {
 
 //Match Token
 exports.matchToken = async (req, res, next) => {
-  const { token, email } = req.body;
-  console.log('bodyyyyyyyyyyyyyyyyyyyyyyy' + req.body.token);
-  const hashedToken = User.createHashFromString(token);
-  const user = await User.findOne({
-    include: [
-      {
-        model: ForgotPasswordToken,
-        where: {
-          token: hashedToken,
-          expiresIn: {
-            [Op.gte]: Date.now(),
+  try {
+    const { token, email } = req.body;
+    console.log('bodyyyyyyyyyyyyyyyyyyyyyyy' + req.body.token);
+    const hashedToken = User.createHashFromString(token);
+    const user = await User.findOne({
+      include: [
+        {
+          model: ForgotPasswordToken,
+          where: {
+            token: hashedToken,
+            expiresIn: {
+              [Op.gte]: Date.now(),
+            },
           },
         },
-      },
-    ],
-    where: { email },
-  });
-  console.log('userrrrrrrrrrrrrrrrrrrrrrrrrrr' + user);
+      ],
+      where: { email },
+    });
+    console.log('userrrrrrrrrrrrrrrrrrrrrrrrrrr' + user);
 
-  if (!user)
-    return next(new APIError(messages.INVALID_TOKEN, status.UNAUTHORIZED));
+    if (!user)
+      return next(new APIError(messages.INVALID_TOKEN, status.UNAUTHORIZED));
 
-  res.status(status.OK).json({
-    status: messages.SUCCESS,
-    message: messages.TOKEN_MATCHED,
-  });
+    res.status(status.OK).json({
+      status: messages.SUCCESS,
+      message: messages.TOKEN_MATCHED,
+    });
+  }
+  catch (error) {
+    console.log("errorrrrrrrrrrrrr", error);
+  }
 };
 
 //Reset Password
