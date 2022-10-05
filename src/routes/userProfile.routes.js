@@ -36,9 +36,9 @@ userProfileRouter
   .route("/update-password")
   .put(checkDuplicatePassword, updatePassword);
 userProfileRouter.route("/update-location").put(updateLocation);
-userProfileRouter
-  .route("/update-password")
-  .put(checkDuplicatePassword, updatePassword);
+// userProfileRouter
+//   .route("/update-password")
+//   .put(checkDuplicatePassword, updatePassword);
 userProfileRouter.route("/edit").put(editProfile);
 userProfileRouter.route("/update-recent-location").put(updateRecentLocation);
 userProfileRouter.route("/user-data").get(userData);

@@ -187,24 +187,29 @@ const getSingleUser = catchAsync(async (req, res, next) => {
 
 //Create user
 const createUser = catchAsync(async (req, res, next) => {
-  let { gender, email, password } = req.body;
+  try {
+    let { gender, email, password } = req.body;
 
-  const user = await User.create({
-    gender,
-    email,
-    password: bcrypt.hashSync(password, 8),
-    roleId: 1,
-    userStatus: 1,
-  });
+    const user = await User.create({
+      gender,
+      email,
+      password: bcrypt.hashSync(password, 8),
+      roleId: 1,
+      userStatus: 1,
+    });
 
-  await UserProfile.create({
-    userId: user.id,
-  });
+    await UserProfile.create({
+      userId: user.id,
+    });
 
-  res.status(status.OK).send({
-    status: messages.SUCCESS,
-    data: user,
-  });
+    res.status(status.OK).send({
+      status: messages.SUCCESS,
+      data: user,
+    });
+  }
+  catch (error) {
+    console.log('errorrrrr',error)
+  }
 });
 
 //Edit User
