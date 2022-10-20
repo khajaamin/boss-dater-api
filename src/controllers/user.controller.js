@@ -107,6 +107,7 @@ exports.reportUser = async (req, res, next) => {
 
 exports.likeUser = async (req, res, next) => {
   try {
+    console.log("TUSHAR_dev Like started")
     const userExists = await User.findByPk(req.params.id);
     if (!userExists) {
       throw new Error("User you want to like not found");
@@ -144,6 +145,7 @@ exports.likeUser = async (req, res, next) => {
       data: likeObject,
     });
   } catch (error) {
+    console.log("Error in Like",error)
     return next(new APIError(error.message, status.BAD_REQUEST));
   }
 };
@@ -761,31 +763,31 @@ exports.viewUser = async (req, res, next) => {
   }
 };
 
-exports.likeUser = async (req, res, next) => {
-  try {
-    const userExists = await User.findByPk(req.params.id);
-    if (!userExists) {
-      throw new Error("User you want to like not found");
-    }
-    const like = {
-      where: {
-        from: req.user.id,
-        to: parseInt(req.params.id),
-      },
-    };
-    const alreadyLiked = await Like.findOne(like);
-    if (alreadyLiked) {
-      throw new Error(messages.ALREADY_LIKED);
-    }
-    const likeObject = await Like.create(like.where);
-    res.status(200).send({
-      status: "success",
-      data: likeObject,
-    });
-  } catch (error) {
-    return next(new APIError(error, status.BAD_REQUEST));
-  }
-};
+// exports.likeUser = async (req, res, next) => {
+//   try {
+//     const userExists = await User.findByPk(req.params.id);
+//     if (!userExists) {
+//       throw new Error("User you want to like not found");
+//     }
+//     const like = {
+//       where: {
+//         from: req.user.id,
+//         to: parseInt(req.params.id),
+//       },
+//     };
+//     const alreadyLiked = await Like.findOne(like);
+//     if (alreadyLiked) {
+//       throw new Error(messages.ALREADY_LIKED);
+//     }
+//     const likeObject = await Like.create(like.where);
+//     res.status(200).send({
+//       status: "success",
+//       data: likeObject,
+//     });
+//   } catch (error) {
+//     return next(new APIError(error, status.BAD_REQUEST));
+//   }
+// };
 
 exports.showOnlineStatus = async (req, res, next) => {
   const user = await User.findOne({ where: { id: req.user.id } });

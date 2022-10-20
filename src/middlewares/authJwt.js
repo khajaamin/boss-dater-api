@@ -10,7 +10,7 @@ exports.authJwt = (req, res, next) => {
       if (info)
         return next(new APIError(info.message, status.BAD_REQUEST))
       req.user = user
-      console.log('************** ')
+      console.log('************** TUSHAR')
       console.log(user)
       next()
     }
