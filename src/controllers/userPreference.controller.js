@@ -199,8 +199,9 @@ exports.create = catchAsync(async (req, res) => {
         userId: user.id,
       },
     });
+    console.log("isImageUploaded",isImageUploaded)
     if (isImageUploaded) {
-      percentage = percentage + IMAGE_UPLOAD_PERCENTAGE;
+      percentage = percentage + IMAGE_UPLOAD_PERCENTAGE; //this one is not working
     }
 
     await User.update(

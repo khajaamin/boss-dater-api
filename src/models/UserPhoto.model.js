@@ -7,14 +7,14 @@ class UserPhoto extends Model {
 
 UserPhoto.init(
   {
-    // userId: {
-    //   type: DataTypes.INTEGER,
-    //   allowNull: false,
-    //   references: {
-    //     model: "Users",
-    //     key: "id",
-    //   },
-    // },
+    userId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: {
+        model: "Users",
+        key: "id",
+      },
+    },
     photo: {
       type: DataTypes.STRING,
       allowNull: true,

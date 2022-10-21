@@ -679,6 +679,7 @@ exports.verifyEmailVerificationCode = async (req, res, next) => {
 };
 
 exports.signupEmailVerification = async (req, res, next) => {
+  console.log('req',req)
   try {
     const { email } = req.body;
     const subject = messages.EMAIL_VERIFICATION;
