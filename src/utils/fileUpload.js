@@ -7,6 +7,7 @@ const s3 = new AWS.S3({
 });
 
 exports.uploadFile = (file) => {
+  console.log('process.env.AWS_BUCKET',process.env.AWS_BUCKET)
   const params = {
     Bucket: process.env.AWS_BUCKET,
     Key: Date.now() + file.name,
