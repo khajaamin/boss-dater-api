@@ -19,6 +19,7 @@ const RelationshipStatus = require("../models/RelationshipStatus.model");
 const UserTag = require("../models/UserTag.model");
 const Tag = require("../models/Tag.model");
 const View = require("../models/View.model");
+const UserFcmTokens = require("../models/UserFcmToken.model");
 const { sendUnscheduledNotification } = require("../utils/sendNotification");
 const haversine = require('haversine')
 
@@ -121,29 +122,30 @@ exports.likeUser = async (req, res, next) => {
     const alreadyLiked = await Like.findOne(clause);
     if (alreadyLiked) {
       throw new Error(messages.ALREADY_LIKED);
-    }
-    const likeObject = await Like.create(clause.where);
-    let userFcmTokens = await userFcmTokens.findAll({
-      where: {
-        userId: req.params.id,         },
-    });
-    if (userFcmTokens.length) {
-      userFcmTokens = userFcmTokens.map(function (user) {
-        return user["fcmToken"];
+    }else{
+      const likeObject = await Like.create(clause.where);
+      let userFcmTokensOb = await UserFcmTokens.findAll({
+        where: {
+          userId: req.params.id,         },
       });
-      let notification_options = {
-        regTokens: userFcmTokens,
-        notificationMsg: {
-          data: { title: title, message: description },
-          notification: { title: title, message: description },
-        },
-      };
-      sendUnscheduledNotification(notification_options);
+      if (userFcmTokensOb.length) {
+        userFcmTokensOb = userFcmTokensOb.map(function (user) {
+          return user["fcmToken"];
+        });
+        let notification_options = {
+          regTokens: userFcmTokensOb,
+          notificationMsg: {
+            data: { title: title, message: description },
+            notification: { title: title, message: description },
+          },
+        };
+        sendUnscheduledNotification(notification_options);
+      }
+      res.status(200).send({
+        status: "success",
+        data: likeObject,
+      });
     }
-    res.status(200).send({
-      status: "success",
-      data: likeObject,
-    });
   } catch (error) {
     console.log("Error in Like",error)
     return next(new APIError(error.message, status.BAD_REQUEST));
@@ -757,6 +759,7 @@ exports.viewUser = async (req, res, next) => {
     }
     res.status(200).send({
       status: "success",
+      data: userExists
     });
   } catch (error) {
     return next(new APIError(error.message, status.BAD_REQUEST));
