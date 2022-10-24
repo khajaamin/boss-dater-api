@@ -448,7 +448,8 @@ exports.editProfile = catchAsync(async (req, res) => {
     });
 
     res.status(200).send({
-      status: "successfully edited and updated the profile",
+      status: "success",
+      message:"successfully edited and updated the profile",
       // token,
       data: user,
     });
