@@ -319,8 +319,8 @@ exports.searchFilter = catchAsync(async (req, res) => {
       await Promise.all(
         tagIds.map(async (tagId) => {
           await UserTag.create({
-            userPreferenceId: userPreference.id,
-            tagId: tagId,
+            userPreferenceId: parseInt(userPreference.id),
+            tagId: parseInt(tagId),
           });
         })
       );
@@ -424,3 +424,76 @@ exports.searchFilter = catchAsync(async (req, res) => {
     });
   }
 });
+
+
+exports.getMyPreference = catchAsync(async (req, res) => {
+
+try{
+  const userPreference = await UserPreference.findOne({
+    where: {
+      userId: req.user.id,
+    },
+
+    include: [
+      {
+        model: RelationshipStatus,
+        attributes: ["id", "name"],
+      },
+      {
+        model: BodyType,
+        attributes: ["id", "name"],
+      },
+      {
+        model: Ethnicity,
+        attributes: ["id", "name"],
+      },
+      {
+        model: HairColor,
+        attributes: ["id", "name"],
+      },
+      {
+        model: Education,
+        attributes: ["id", "name"],
+      },
+      {
+        model: Children,
+        attributes: ["id", "name"],
+      },
+      {
+        model: Occupation,
+        attributes: ["id", "name"],
+      },
+      {
+        model: UserTag,
+        include: [
+          {
+            model: Tag,
+            attributes: ["id", "name"],
+          },
+        ],
+      },
+    ],
+  });
+   
+  if(userPreference){
+      res.status(200).send({
+        status: messages.SUCCESS,
+        data: userPreference,
+        message: "Preference",
+      });
+      }else{
+        res.status(200).send({
+          status: messages.SUCCESS,
+          data: null,
+          message: "Preference not found",
+        });
+  }
+} catch (error) {
+  
+  console.log(error);
+  res.status(500).send({
+    message: error.message,
+  });
+}
+})
+

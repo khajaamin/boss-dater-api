@@ -390,12 +390,34 @@ exports.editProfile = catchAsync(async (req, res) => {
         userId: req.user.id,
       },
     });
-    await UserPreference.update(params, {
+   const userpreferenceUpdtedresult = await UserPreference.update(params, {
       where: {
         userId: req.user.id,
       },
     });
 
+    const userPreference = await UserPreference.findOne({
+      where: {
+        userId: req.user.id,
+      },
+    });
+
+    if (userPreference != null) {
+      console.log('userPreference--->',userPreference)
+      //await UserTag.destroy({ where: { userPreferenceId: userPreference.id }})
+      // const newTags = JSON.parse(tagIds)
+      await Promise.all(
+        tagIds.map(async (tagId) => {
+          console.log('tagId',tagId)
+          await UserTag.create({
+            userPreferenceId: userPreference.id,
+            tagId: tagId,
+          });
+        })
+      );
+    }
+
+console.log('userpreferenceUpdtedresult',params, userpreferenceUpdtedresult)
     if(Array.isArray(req.body.photos) && req.body.photos.length > 0) {
       req.body.photos.forEach((photo, index) => {
         UserPhoto.create({
@@ -446,6 +468,7 @@ exports.editProfile = catchAsync(async (req, res) => {
         },
       ],
     });
+    console.log('useruser', user)
 
     res.status(200).send({
       status: "success",

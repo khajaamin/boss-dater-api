@@ -237,86 +237,91 @@ exports.login = catchAsync(async (req, res, next) => {
   });
 
   if (!user) {
-    return next(
-      new APIError(messages.INCORRECT_EMAIL_OR_PASSWORD, status.BAD_REQUEST)
-    );
-  }
+   return res.status(200).send({
+      status: messages.BAD_REQUEST,
+      message: messages.INCORRECT_EMAIL_OR_PASSWORD
+    })
+    // return next(
+    //   new APIError(messages.INCORRECT_EMAIL_OR_PASSWORD, status.BAD_REQUEST)
+    // );
+  }else{
 
-  if (req.body.fcmToken) {
-    let fcmTokenExists = await UserFcmToken.findOne({
-      where: {
-        userId: user.id,
-        fcmToken: parseInt(req.body.fcmToken),
-      },
-    });
-    if (!fcmTokenExists) {
-      await UserFcmToken.create({
-        userId: user.id,
-        fcmToken: parseInt(req.body.fcmToken),
+      if (req.body.fcmToken) {
+        let fcmTokenExists = await UserFcmToken.findOne({
+          where: {
+            userId: user.id,
+            fcmToken: parseInt(req.body.fcmToken),
+          },
+        });
+        if (!fcmTokenExists) {
+          await UserFcmToken.create({
+            userId: user.id,
+            fcmToken: parseInt(req.body.fcmToken),
+          });
+        }
+      }
+
+      let percentage = DEFAULT_PERCENTAGE;
+
+      let profileValues = Object.assign({}, user.UserProfile.dataValues);
+      let preferenceValues = Object.assign({}, user.UserPreference.dataValues);
+
+      let notNullProfileValues = Object.keys(profileValues).filter(
+        (x) => profileValues[x] !== null
+      ).length;
+
+      let notNullPreferenceValues = Object.keys(preferenceValues).filter(
+        (x) => preferenceValues[x] !== null
+      ).length;
+      if (notNullProfileValues > 5) {
+        percentage = percentage + PROFILE_PERCENTAGE;
+      }
+      if (notNullPreferenceValues > 6) {
+        percentage = percentage + RELATIONSHIP_INTENT_PERCENTAGE;
+      }
+      let isImageUploaded = await UserPhoto.findOne({
+        where: {
+          userId: user.id,
+        },
       });
-    }
-  }
+      if (isImageUploaded) {
+        percentage = percentage + IMAGE_UPLOAD_PERCENTAGE;
+      }
+      if (validateEmail(req.body.email)) {
+        if (!user)
+          return next(
+            new APIError(messages.INCORRECT_EMAIL_OR_PASSWORD, status.BAD_REQUEST)
+          );
 
-  let percentage = DEFAULT_PERCENTAGE;
-
-  let profileValues = Object.assign({}, user.UserProfile.dataValues);
-  let preferenceValues = Object.assign({}, user.UserPreference.dataValues);
-
-  let notNullProfileValues = Object.keys(profileValues).filter(
-    (x) => profileValues[x] !== null
-  ).length;
-
-  let notNullPreferenceValues = Object.keys(preferenceValues).filter(
-    (x) => preferenceValues[x] !== null
-  ).length;
-  if (notNullProfileValues > 5) {
-    percentage = percentage + PROFILE_PERCENTAGE;
-  }
-  if (notNullPreferenceValues > 6) {
-    percentage = percentage + RELATIONSHIP_INTENT_PERCENTAGE;
-  }
-  let isImageUploaded = await UserPhoto.findOne({
-    where: {
-      userId: user.id,
-    },
-  });
-  if (isImageUploaded) {
-    percentage = percentage + IMAGE_UPLOAD_PERCENTAGE;
-  }
-  if (validateEmail(req.body.email)) {
-    if (!user)
-      return next(
-        new APIError(messages.INCORRECT_EMAIL_OR_PASSWORD, status.BAD_REQUEST)
+        var passwordIsValid = bcrypt.compareSync(
+          req.body.password,
+          user._previousDataValues.password
+        );
+        if (!passwordIsValid)
+          return next(
+            new APIError(messages.INCORRECT_EMAIL_OR_PASSWORD, status.UNAUTHORIZED)
+          );
+      }
+      await User.update(
+        { profileCompletionPercentage: percentage },
+        {
+          where: {
+            id: user.id,
+          },
+        }
       );
 
-    var passwordIsValid = bcrypt.compareSync(
-      req.body.password,
-      user._previousDataValues.password
-    );
-    if (!passwordIsValid)
-      return next(
-        new APIError(messages.INCORRECT_EMAIL_OR_PASSWORD, status.UNAUTHORIZED)
-      );
-  }
-  await User.update(
-    { profileCompletionPercentage: percentage },
-    {
-      where: {
-        id: user.id,
-      },
+      //Check is disabled or deleted
+      if (checkAccountDeletion(user, next)) {
+        var token = user.getJWTToken();
+        res.status(200).send({
+          status: messages.SUCCESS,
+          data: user,
+          accessToken: token,
+          profileCompletionPercentage: percentage,
+        });
+      }
     }
-  );
-
-  //Check is disabled or deleted
-  if (checkAccountDeletion(user, next)) {
-    var token = user.getJWTToken();
-    res.status(200).send({
-      status: messages.SUCCESS,
-      data: user,
-      accessToken: token,
-      profileCompletionPercentage: percentage,
-    });
-  }
 });
 
 //Forget password
