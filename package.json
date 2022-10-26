@@ -8,6 +8,10 @@
     "sync:db": "node src/scripts/syncDB.js",
     "seed:db": "node src/scripts/seedDB.js"
   },
+  "engines": {
+    "node": "14.17.0",
+    "npm": "6.14.13"
+  },
   "dependencies": {
     "agora-access-token": "^2.0.4",
     "aws-sdk": "^2.1074.0",
