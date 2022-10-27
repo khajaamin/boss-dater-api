@@ -79,7 +79,7 @@ exports.create = catchAsync(async (req, res) => {
     });
     if (userPreference != null) {
       // const newTags = JSON.parse(tagIds)
-     // UserTag.destroy({ where: { userPreferenceId: userPreference.id }})
+      await UserTag.destroy({ where: { userPreferenceId: userPreference.id }})
 
       await Promise.all(
         tagIds.map(async (tagId) => {
@@ -318,7 +318,7 @@ exports.searchFilter = catchAsync(async (req, res) => {
 
     if (req.user.UserPreference != null) {
       // const newTags = JSON.parse(tagIds)
-      UserTag.destroy({ where: { userPreferenceId: userPreference.id }})
+      await UserTag.destroy({ where: { userPreferenceId: userPreference.id }})
 
       await Promise.all(
         tagIds.map(async (tagId) => {

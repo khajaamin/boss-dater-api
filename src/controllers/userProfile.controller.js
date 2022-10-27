@@ -405,13 +405,10 @@ exports.editProfile = catchAsync(async (req, res) => {
 
     if (userPreference != null) {
       console.log('userPreference--->',userPreference)
-      //await UserTag.destroy({ where: { userPreferenceId: userPreference.id }})
-      // const newTags = JSON.parse(tagIds)
-      UserTag.destroy({ where: { userPreferenceId: userPreference.id }})
+      await UserTag.destroy({ where: { userPreferenceId: userPreference.id }})
 
       await Promise.all(
         tagIds.map(async (tagId) => {
-          console.log('tagId',tagId)
           await UserTag.create({
             userPreferenceId: userPreference.id,
             tagId: tagId,
