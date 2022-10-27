@@ -12,6 +12,7 @@ exports.uploadFile = (file) => {
     Bucket: process.env.AWS_BUCKET,
     Key: Date.now() + file.name,
     Body: file.data,
+    ACL:"public-read-write", 
     ContentType: file.mimetype,
   };
   return s3.upload(params).promise();
