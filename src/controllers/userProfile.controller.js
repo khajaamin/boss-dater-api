@@ -200,6 +200,7 @@ exports.uploadProfileImage = async (req, res, next) => {
         },
       ],
     });
+    console.log('useruser',user)
     res.status(200).send({
       status: "success",
       data: user,
@@ -406,6 +407,8 @@ exports.editProfile = catchAsync(async (req, res) => {
       console.log('userPreference--->',userPreference)
       //await UserTag.destroy({ where: { userPreferenceId: userPreference.id }})
       // const newTags = JSON.parse(tagIds)
+      UserTag.destroy({ where: { userPreferenceId: userPreference.id }})
+
       await Promise.all(
         tagIds.map(async (tagId) => {
           console.log('tagId',tagId)
