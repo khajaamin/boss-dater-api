@@ -150,7 +150,9 @@ exports.uploadProfileImage = async (req, res, next) => {
           })
         );
       } else {
+        console.log("-------image type", req.body, req.files)
         const result = await uploadFile(req.files.profileImages);
+
         await UserPhoto.create({
           userId: req.user.id,
           photo: result.Location,
@@ -200,7 +202,6 @@ exports.uploadProfileImage = async (req, res, next) => {
         },
       ],
     });
-    console.log('useruser',user)
     res.status(200).send({
       status: "success",
       data: user,
@@ -231,12 +232,13 @@ exports.deleteImage = catchAsync(async (req, res) => {
       },
     });
 
-    res.status(200).send({
+    return res.status(200).send({
+      status:'success',
       message: "successfully deleted the image",
     });
   } catch (error) {
-    res.status(500).send({
-      message: error.message,
+    return res.status(500).send({
+      message: "Unable to delete photo.",
     });
   }
 });
@@ -468,7 +470,6 @@ console.log('userpreferenceUpdtedresult',params, userpreferenceUpdtedresult)
         },
       ],
     });
-    console.log('useruser', user)
 
     res.status(200).send({
       status: "success",
