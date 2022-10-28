@@ -1146,6 +1146,11 @@ exports.showLatestUser = async (req, res, next) => {
         isDisabled: false,
       },
       order: [["id", "DESC"]],
+      include: [
+        {
+          model:UserPhoto
+        }]
+      
     }
   );
 
@@ -1242,7 +1247,11 @@ exports.showNearByUser = async (req, res, next) => {
     //   lng: longitude
     // })
     let loggedInUser = await User.findOne({
-      where: { id: req.user.id }, include: [
+      where: { id: req.user.id }, 
+      include: [
+          {
+            model:UserPhoto
+          },
         {
           model: UserProfile,
           include: [
@@ -1354,6 +1363,10 @@ exports.showRecentlyActiveUser = async (req, res, next) => {
         isDisabled: false,
       },
       order: [["id", "DESC"]],
+      include: [
+        {
+          model:UserPhoto
+        }]
     }
   );
 
