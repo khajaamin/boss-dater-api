@@ -743,7 +743,86 @@ exports.getListOfAllUsersWhoViewedMe = async (req, res, next) => {
 
 exports.viewUser = async (req, res, next) => {
   try {
-    const userExists = await User.findByPk(req.params.id);
+    const userExists = await User.findByPk(req.params.id,{
+      include: [
+        {
+          model: UserPhoto,
+         
+        },
+        {
+          model: UserProfile,
+          include: [
+           
+            {
+              model: BodyType,
+              attributes: ["id", "name"],
+            },
+            {
+              model: Ethnicity,
+              attributes: ["id", "name"],
+            },
+            {
+              model: HairColor,
+              attributes: ["id", "name"],
+            },
+            {
+              model: Education,
+              attributes: ["id", "name"],
+            },
+            {
+              model: Children,
+              attributes: ["id", "name"],
+            },
+            {
+              model: Occupation,
+              attributes: ["id", "name"],
+            },
+          ],
+        },
+        {
+          model: UserPreference,
+          include: [
+            {
+              model: RelationshipStatus,
+              attributes: ["id", "name"],
+            },
+            {
+              model: BodyType,
+              attributes: ["id", "name"],
+            },
+            {
+              model: Ethnicity,
+              attributes: ["id", "name"],
+            },
+            {
+              model: HairColor,
+              attributes: ["id", "name"],
+            },
+            {
+              model: Education,
+              attributes: ["id", "name"],
+            },
+            {
+              model: Children,
+              attributes: ["id", "name"],
+            },
+            {
+              model: Occupation,
+              attributes: ["id", "name"],
+            },
+            {
+              model: UserTag,
+              include: [
+                {
+                  model: Tag,
+                  attributes: ["id", "name"],
+                },
+              ],
+            },
+          ],
+        },
+      ]
+    });
     if (!userExists) {
       throw new Error("User you want to view not found");
     }
@@ -1054,6 +1133,7 @@ exports.showSomeOneSendMeMessage = async (req, res, next) => {
 
 
 const { Op } = require("sequelize");
+const { UserPhoto } = require("../models");
 
 exports.showLatestUser = async (req, res, next) => {
   const user = await User.findAll(
