@@ -65,24 +65,20 @@ const { Pool, Client } = require('pg')
   }
 }
 
-const  getUserPreferenceCondition = async(req, where = {})=>{
+const  getUserPreferenceCondition = async(req, activeUserSearch = null)=>{
 
-  let activeUserSearch =await  UserSearch.findOne({
-    isActive: true,
-    userId: req.user.id,
-  })
+  const where = {}
+
+  if(!activeUserSearch){
+    activeUserSearch =await  UserSearch.findOne({
+      isActive: true,
+      userId: req.user.id,
+    })
+  }
+
+  
   if(activeUserSearch){
-    // if(activeUserSearch.minAge){
-    //   where.minAge={
-    //       [Op.gt]: activeUserSearch.minAge
-    //     }
-    // }
-    // if(activeUserSearch.maxAge){
-    //   where.height={
-    //       [Op.lt]: activeUserSearch.maxAge
-    //     }
-    // }
-
+  
     if(activeUserSearch.minHeight){
       where.height={
           [Op.gt]: activeUserSearch.minHeight

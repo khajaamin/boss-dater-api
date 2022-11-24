@@ -4,6 +4,8 @@ const APIError = require("../utils/APIError.js");
 const sequelize = require("../config/db.config");
 const status = require("http-status");
 const catchAsync = require("../utils/catchAsync");
+const UserSearch = require("../models/UserSearch.model");
+
 const {
   User,
   UserProfile,
@@ -19,10 +21,12 @@ const {
   Tag,
   Block,
   Like,
+  View,
 } = require("../models");
 const messages = require("../utils/constants");
 const haversine = require("haversine-distance");
 const {getCommonWhereCondition, getUserPreferenceCondition} =  require('./user.controller');
+const moment = require("moment/moment.js");
 
 // route of this api is in user routes //
 
@@ -41,21 +45,57 @@ exports.matchUser = catchAsync(async (req, res, next) => {
     isDisabled: false,
   })
 
-  const prefrenceWhere = await getUserPreferenceCondition(req)
-
-
-  let  likes = await Like.findAll(({
-    attributes:['to'],
-    from : req.user.id
-  }))
+  let activeUserSearch =await  UserSearch.findOne({
+    isActive: true,
+    userId: req.user.id,
+  })
   
-const likeList =likes?.map(u => u.get("to"))
+  const prefrenceWhere = await getUserPreferenceCondition(req, activeUserSearch)
+    
 
-if(likeList && likeList.length>0){
-  where[Op.and]={
-    id :{[Op.notIn]: likeList }
-  }
-}
+   // START of NOT IN list 
+  let finalFavList = []
+  let finalViewedMeList = []
+
+  if(activeUserSearch && !activeUserSearch.favoritedMe){
+    let  likes = await Like.findAll(({
+        attributes:['to'],
+        to : req.user.id
+      }))
+        
+      const likeList =likes?.map(u => u.get("to"))
+      if(likeList && likeList.length>0){
+        finalFavList = likeList || []
+      }
+    }
+
+    if(activeUserSearch && !activeUserSearch.viewedMe){
+      let  viewed = await View.findAll(({
+          attributes:['to'],
+          to : req.user.id
+        }))
+          
+        const viewList =viewed?.map(u => u.get("to"))
+  
+        if(viewList && viewList.length>0){
+          finalViewedMeList = viewList || []
+        }
+      }
+      let notInList = [...finalFavList,...finalViewedMeList]
+      if(notInList && notInList.length){
+        where[Op.and]={
+          id :{[Op.notIn]: notInList }
+        }
+      }
+      // END of NOT IN list 
+
+    if(activeUserSearch && activeUserSearch.minAge && activeUserSearch.maxAge){
+      const start =  moment().subtract(activeUserSearch.maxAge, 'years').format('YYYY-MM-DD');
+      const end =  moment().subtract(activeUserSearch.minAge, 'years').format('YYYY-MM-DD');
+      where.birthDate={
+        [Op.between]: [start, end]
+      }
+    }
 
     let users = await User.findAll({
       where: where,
