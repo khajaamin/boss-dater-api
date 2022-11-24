@@ -77,8 +77,16 @@ const  getUserPreferenceCondition = async(req, activeUserSearch = null)=>{
   }
 
   
+
   if(activeUserSearch){
   
+    if(activeUserSearch.minNetWorth && activeUserSearch.maxNetWorth)
+    {      
+      where.netWorth={
+        [Op.between]: [parseFloat(activeUserSearch.minNetWorth), parseFloat(activeUserSearch.maxNetWorth)]
+      }
+    }
+    
     if(activeUserSearch.minHeight){
       where.height={
           [Op.gt]: activeUserSearch.minHeight
