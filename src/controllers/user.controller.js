@@ -29,12 +29,17 @@ const { Pool, Client } = require("pg");
 const getCommonWhereCondition = async (req, where = {}) => {
   let blocks = await Block.findAll({
     attributes: ["against"],
-    from: req.user.id
+    where: {
+     
+      from: req.user.id
+      }
   });
 
   let reports = await Report.findAll({
     attributes: ["against"],
-    from: req.user.id
+    where: {
+      from: req.user.id
+    }
   });
 
   if (blocks || reports) {
@@ -72,8 +77,17 @@ const getUserPreferenceCondition = async (req, activeUserSearch = null) => {
     if (activeUserSearch.minNetWorth && activeUserSearch.maxNetWorth) {
       where.netWorth = {
         [Op.between]: [
-          parseFloat(activeUserSearch.minNetWorth),
-          parseFloat(activeUserSearch.maxNetWorth)
+          parseInt(activeUserSearch.minNetWorth),
+          parseInt(activeUserSearch.maxNetWorth)
+        ]
+      };
+    }
+
+    if (activeUserSearch.minDistance && activeUserSearch.maxDistance) {
+      where.netWorth = {
+        [Op.between]: [
+          parseInt(activeUserSearch.minDistance),
+          parseInt(activeUserSearch.maxDistance)
         ]
       };
     }
@@ -126,11 +140,17 @@ const getUserPreferenceCondition = async (req, activeUserSearch = null) => {
       };
     }
 
-    // if(activeUserSearch.showMemberSeekengIds.length>0){
-    //   where.id={
-    //     [Op.in]: activeUserSearch.showMemberSeekengIds
-    //   }
-    // }
+    if(activeUserSearch.showMemberSeekengIds.length>0){
+      where.id={
+        [Op.in]: activeUserSearch.showMemberSeekengIds
+      }
+    }
+
+    if(activeUserSearch.doNotShowMemberSeekings.length>0){
+      where.id={
+        [Op.in]: activeUserSearch.showMemberSeekengIds
+      }
+    }
     console.log("useruseruser-->111", where);
     return where;
   }
@@ -1615,7 +1635,6 @@ exports.showRecentlyActiveUser = async (req, res, next) => {
 
 exports.saveUserSearch = async (req, res, next) => {
   try {
-    console.log("req.bodyreq.body", req.body);
     if (req.params.id) {
       const userSearchExists = await UserSearch.findOne({
         where: {
@@ -1653,6 +1672,7 @@ exports.saveUserSearch = async (req, res, next) => {
         throw new Error("You are using duplicate search name.");
       } else {
         const createObject = { ...req.body, userId: req.user.id };
+        console.log("createObjectcreateObject",createObject)
         const searchObject = await UserSearch.create(createObject);
         res.status(200).send({
           status: "success",
@@ -1677,6 +1697,8 @@ exports.getUserSearches = async (req, res, next) => {
       },
       order: [["createdAt", "DESC"]]
     });
+
+    console.log("searches",searches)
 
     res.status(200).send({
       status: "success",
@@ -1750,6 +1772,7 @@ exports.activateUserSearchById = async (req, res, next) => {
           id: req.params.id
         }
       });
+
 
       if (!userSearchExists) {
         throw new Error("User Search not found");
