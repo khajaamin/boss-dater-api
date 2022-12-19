@@ -83,15 +83,6 @@ const getUserPreferenceCondition = async (req, activeUserSearch = null) => {
       };
     }
 
-    if (activeUserSearch.minDistance && activeUserSearch.maxDistance) {
-      where.netWorth = {
-        [Op.between]: [
-          parseInt(activeUserSearch.minDistance),
-          parseInt(activeUserSearch.maxDistance)
-        ]
-      };
-    }
-
     if (activeUserSearch.minHeight) {
       where.height = {
         [Op.gt]: activeUserSearch.minHeight
@@ -140,17 +131,6 @@ const getUserPreferenceCondition = async (req, activeUserSearch = null) => {
       };
     }
 
-    if(activeUserSearch.showMemberSeekengIds.length>0){
-      where.id={
-        [Op.in]: activeUserSearch.showMemberSeekengIds
-      }
-    }
-
-    if(activeUserSearch.doNotShowMemberSeekings.length>0){
-      where.id={
-        [Op.in]: activeUserSearch.showMemberSeekengIds
-      }
-    }
     console.log("useruseruser-->111", where);
     return where;
   }

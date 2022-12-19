@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const { Op } = require("sequelize");
+const { Op, where, literal } = require("sequelize");
 const APIError = require("../utils/APIError.js");
 const sequelize = require("../config/db.config");
 const status = require("http-status");
@@ -23,6 +23,7 @@ const {
   Like,
   View
 } = require("../models");
+
 const messages = require("../utils/constants");
 const haversine = require("haversine-distance");
 const {
@@ -31,13 +32,11 @@ const {
 } = require("./user.controller");
 const moment = require("moment/moment.js");
 
-// route of this api is in user routes //
 
 exports.matchUser = catchAsync(async (req, res, next) => {
   try {
     let me = req.user;
     let preference = await req.user.getUserPreference();
-    // console.log("memememememememememe",preference)
 
     let weightOnUsers = null;
 
@@ -56,14 +55,13 @@ exports.matchUser = catchAsync(async (req, res, next) => {
       }
     });
 
-    const prefrenceWhere = await getUserPreferenceCondition(
+    let prefrenceWhere = await getUserPreferenceCondition(
       req,
       activeUserSearch
     );
 
-    console.log("prefrenceWhereprefrenceWhere", activeUserSearch);
+    console.log("prefrenceWhereprefrenceWhere", prefrenceWhere);
 
-    // START of NOT IN list
     let finalFavList = [];
     let finalViewedMeList = [];
 
@@ -97,7 +95,6 @@ exports.matchUser = catchAsync(async (req, res, next) => {
         id: { [Op.notIn]: notInList }
       };
     }
-    // END of NOT IN list
 
     if (
       activeUserSearch &&
@@ -115,15 +112,76 @@ exports.matchUser = catchAsync(async (req, res, next) => {
       };
     }
 
-    let users = await User.findAll({
+    if (activeUserSearch) {
+      let sekkingIds = [];
+      sekkingIds = await UserTag.findAll({
+        attributes: ["userPreferenceId"],
+        where: {
+          tagId: {
+            [Op.in]: activeUserSearch.showMemberSeekengIds
+          }
+        }
+      });
+      
+      let notSekkingIds = [];
+      notSekkingIds = await UserTag.findAll({
+        attributes: ["userPreferenceId"],
+        where: {
+          tagId: {
+            [Op.in]: activeUserSearch.doNotShowMemberSeekings
+          }
+        }
+      });
+
+      var actualSekkingIds = [];
+      actualSekkingIds =  sekkingIds.map((k) => {
+        return k?.dataValues?.userPreferenceId;
+      });
+
+      var actualNotSekkingIds = [];
+      actualNotSekkingIds =  notSekkingIds.map((k) => {
+        return k?.dataValues?.userPreferenceId;
+      });
+    }
+
+    const latitude = activeUserSearch?.latitude;
+    const longitude = activeUserSearch?.longitude;
+    const distance = activeUserSearch?.minDistance;
+
+    console.log("latitudelatitudelatitude", latitude, longitude, distance);
+
+    const haversine = (
+        `6371 * acos(
+          cos(radians(${latitude}))
+          * cos(radians(latitude))
+          * cos(radians(longitude) - radians(${longitude}))
+          + sin(radians(latitude)) * sin(radians(${latitude}))
+      )`
+    );
+
+    let users = [];
+    // prefrenceWhere={};
+    if(activeUserSearch && activeUserSearch.minDistance) {
+      prefrenceWhere [Op.and] = [
+        sequelize.where(sequelize.literal(haversine), "<=", distance)
+      ]
+     }
+
+     console.log("prefrenceWhereprefrenceWhereprefrenceWhere",prefrenceWhere)
+
+    users = await User.findAll({
       where: where,
       order: [["id", "DESC"]],
       include: [
         "UserPhotos",
         {
           model: UserProfile,
-          required: true,
           where: prefrenceWhere,
+          attributes: [
+            '*',
+            [sequelize.literal(haversine), 'distance'],
+          ],
+          required: true,
           include: [
             {
               model: RelationshipStatus,
@@ -157,6 +215,23 @@ exports.matchUser = catchAsync(async (req, res, next) => {
         },
         {
           model: UserPreference,
+          where:
+            actualSekkingIds || actualNotSekkingIds
+              && {
+                  [Op.and]: [
+                    {
+                      id: {
+                        [Op.in]: actualSekkingIds || []
+                      }
+                    },
+                    {
+                      id: {
+                        [Op.not]: actualNotSekkingIds || []
+                      }
+                    }
+                  ]
+                },
+          required: true,
           include: [
             {
               model: RelationshipStatus,
@@ -200,12 +275,11 @@ exports.matchUser = catchAsync(async (req, res, next) => {
       ]
     });
 
-    console.log("usersusersusersusers", users);
+    console.log("idsidsidsids", users);
 
     weightOnUsers = users;
     if (activeUserSearch) {
-      weightOnUsers = users.map(async (plainUser) => {
-        let user = plainUser.get({ plain: true });
+      weightOnUsers = users.map((user) => {
         let weight = 0;
 
         let age = getAge(user.birthDate);
@@ -256,39 +330,12 @@ exports.matchUser = catchAsync(async (req, res, next) => {
         if (activeUserSearch.jobTitle?.includes(user.UserProfile.jobTitle)) {
           ++weight;
         }
-        // if (
-        //   activeUserSearch.minNetWorth <= user.UserProfile.minNetWorth &&
-        //   activeUserSearch.maxNetWorth >= user.UserProfile.maxNetWort
-        // ) {
-        //   ++weight;
-        // }
-        console.log("UserTagsUserTags",user.UserPreference.UserTags)
-        if (activeUserSearch.showMemberSeekengIds) {
-          await user.UserPreference.UserTags.map(async (k) => {
-            await activeUserSearch.showMemberSeekengIds.map((i) => {
-              if (k === i) {
-                ++weight;
-              }
-            });
-          });
-        }
-
-        // if (activeUserSearch.doNotShowMemberSeekings) {
-        //   await user.UserPreference.UserTags.map(async (k) => {
-        //     await activeUserSearch.doNotShowMemberSeekings.map((i) => {
-        //       if (k != i) {
-        //         ++weight;
-        //       }
-        //     });
-        //   });
-        // }
 
         user.weight = weight;
         return user;
       });
     } else {
-      weightOnUsers = users.map((plainUser) => {
-        let user = plainUser.get({ plain: true });
+      weightOnUsers = users.map((user) => {
         let weight = 0;
 
         let age = getAge(user.birthDate);
@@ -335,30 +382,11 @@ exports.matchUser = catchAsync(async (req, res, next) => {
         if (preference.jobTitle?.includes(user.UserProfile.jobTitle)) {
           ++weight;
         }
-        if (
-          preference.minNetWorth <= user.UserProfile.minNetWorth &&
-          preference.maxNetWorth >= user.UserProfile.maxNetWort
-        ) {
-          ++weight;
-        }
 
-        if (
-          preference.showMemberSeekengIds?.includes(
-            user.UserProfile.showMemberSeekengId
-          ) //Not working
-        ) {
-          ++weight;
-        }
-        if (
-          preference.doNotShowMemberSeekings?.includes(
-            user.UserProfile.doNotShowMemberSeeking
-          ) //Not working
-        ) {
-          ++weight;
-        }
         user.weight = weight;
         return user;
       });
+
       weightOnUsers.sort((obj1, obj2) => {
         if (obj1.weight > obj2.weight) return -1;
         if (obj1.weight < obj2.weight) return 1;
@@ -366,11 +394,11 @@ exports.matchUser = catchAsync(async (req, res, next) => {
         return 0;
       });
     }
+    
     console.log("activeUserSearch", weightOnUsers);
 
     res.status(200).send({
       status: "success",
-      // token,
       data: weightOnUsers
     });
   } catch (error) {
