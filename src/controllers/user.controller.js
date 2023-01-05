@@ -200,13 +200,13 @@ exports.sendPushNotification = async (req, res, next) => {
         id: req.body.data.id
       }
     });
+
     const clause = {
-      from: parseInt(req.params.id),
+      from: parseInt(req.body.data.id),
       against: req.user.id
     };
     const alreadyBlocked = await Block.findOne({ where: clause });
-
-    console.log("alreadyBlockedalreadyBlocked", alreadyBlocked);
+    console.log("userFcmTokensOb", alreadyBlocked);
 
     if (userFcmTokensOb) {
       console.log(
@@ -224,12 +224,11 @@ exports.sendPushNotification = async (req, res, next) => {
             profileImage: req?.body?.data?.profileImage,
             id: req?.body?.data?.id.toString(),
             senderId: req.user.id.toString()
-            // actions: ["hello", "welcome"].toString(),
           },
           notification: {
             title: req?.body?.data?.name,
             body: req?.body?.data?.message.toString(),
-            image: req?.body?.data?.profileImage,
+            image: req?.body?.data?.profileImage.toString(),
             actions: [
               {
                 title: "Like",
@@ -248,17 +247,18 @@ exports.sendPushNotification = async (req, res, next) => {
         userFcmTokensOb.someoneSendMeMessage
       );
       if (
-        userFcmTokensOb.someoneSendMeMessage === false && alreadyBlocked
+        userFcmTokensOb.someoneSendMeMessage === true &&
+        alreadyBlocked === null
       ) {
-        res.status(200).send({
-          status: "success",
-          data: {}
-        });
-      } else {
         const result = sendUnscheduledNotification(notification_options);
         res.status(200).send({
           status: "success",
           data: result
+        });
+      } else {
+        res.status(200).send({
+          status: "success",
+          data: {}
         });
       }
     } else {
