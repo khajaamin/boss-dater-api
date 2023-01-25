@@ -1821,7 +1821,6 @@ exports.showRecentlyActiveUser = async (req, res, next) => {
 
 // Create user search here
 //accepts post request with params
-
 exports.saveUserSearch = async (req, res, next) => {
   try {
     if (req.params.id) {
